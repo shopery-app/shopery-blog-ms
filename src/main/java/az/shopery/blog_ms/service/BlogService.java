@@ -1,0 +1,24 @@
+package az.shopery.blog_ms.service;
+
+import az.shopery.blog_ms.model.dto.request.BlogRequestDto;
+import az.shopery.blog_ms.model.dto.response.BlogResponseDto;
+import az.shopery.blog_ms.model.dto.shared.SuccessResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
+
+public interface BlogService {
+    SuccessResponse<Page<BlogResponseDto>> getMyBlogs(String userEmail, Pageable pageable);
+    SuccessResponse<BlogResponseDto> addMyBlog(String userEmail, BlogRequestDto blogRequestDto);
+    SuccessResponse<String> updateBlogImage(String userEmail, String blogId, MultipartFile imageFile);
+    SuccessResponse<String> deleteBlogImage(String userEmail, String blogId);
+    SuccessResponse<Page<BlogResponseDto>> getAllBlogs(Pageable pageable);
+    SuccessResponse<Page<BlogResponseDto>> search(String query, Pageable pageable);
+    SuccessResponse<Void> deleteMyBlog(String userEmail, String blogId);
+    SuccessResponse<BlogResponseDto> updateMyBlog(String userEmail, BlogRequestDto blogRequestDto, String blogId);
+    SuccessResponse<BlogResponseDto> getMyBlog(String userEmail, String blogId);
+    SuccessResponse<Void> toggleBlogSave(String userEmail, String blogId);
+    SuccessResponse<Page<BlogResponseDto>> getSavedBlogs(String userEmail, Pageable pageable);
+    SuccessResponse<Void> toggleBlogArchive(String userEmail, String blogId);
+    SuccessResponse<Page<BlogResponseDto>> getArchivedBlogs(String userEmail, Pageable pageable);
+}
