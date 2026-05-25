@@ -1,17 +1,20 @@
 package az.shopery.blog_ms.model.dto.response;
 
-import az.shopery.model.dto.shared.AuthorDto;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
+import az.shopery.blog_ms.model.dto.shared.AuthorDto;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
-@Builder
 @Data
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class BlogResponseDto {
     UUID id;
     String blogTitle;
