@@ -12,3 +12,9 @@ spring:
     properties:
       hibernate:
         format_sql: false
+
+feign:
+  client:
+    config:
+      aws-ms:
+        url: ${AWS_MS}

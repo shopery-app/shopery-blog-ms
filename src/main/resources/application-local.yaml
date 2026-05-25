@@ -12,3 +12,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+feign:
+  client:
+    config:
+      aws-ms:
+        url: ${AWS_MS:http://localhost:8084}

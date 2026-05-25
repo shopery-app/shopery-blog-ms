@@ -1,10 +1,10 @@
 package az.shopery.blog_ms.mapper;
 
+import az.shopery.blog_ms.client.AwsClient;
 import az.shopery.blog_ms.model.dto.response.BlogResponseDto;
 import az.shopery.blog_ms.model.dto.shared.AuthorDto;
 import az.shopery.blog_ms.model.entity.BlogEntity;
 import az.shopery.blog_ms.repository.BlogLikeRepository;
-import az.shopery.blog_ms.util.aws.S3FileUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -12,21 +12,24 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class BlogMapper {
 
+    private final AwsClient awsClient;
     private final BlogLikeRepository blogLikeRepository;
-    private final S3FileUtil s3FileUtil;
 
     public BlogResponseDto toDto(BlogEntity blogEntity) {
+        String presignedUrl = awsClient.getPresignedUrl(blogEntity.getImageUrl()).getBody();
+        String profilePresignedUrl = awsClient.getPresignedUrl(blogEntity.getUser().getProfilePhotoUrl()).getBody();
+
         return BlogResponseDto.builder()
                 .id(blogEntity.getId())
                 .blogTitle(blogEntity.getBlogTitle())
                 .content(blogEntity.getContent())
-                .imageUrl(s3FileUtil.generatePresignedUrl(blogEntity.getImageUrl()))
+                .imageUrl(presignedUrl)
                 .createdAt(blogEntity.getCreatedAt())
                 .updatedAt(blogEntity.getUpdatedAt())
                 .likeCount(blogLikeRepository.countByBlog(blogEntity))
                 .author(AuthorDto.builder()
                         .name(blogEntity.getUser().getName())
-                        .profilePhotoUrl(s3FileUtil.generatePresignedUrl(blogEntity.getUser().getProfilePhotoUrl()))
+                        .profilePhotoUrl(profilePresignedUrl)
                         .build())
                 .build();
     }
