@@ -1,7 +1,6 @@
 package az.shopery.blog_ms.handler;
 
 import az.shopery.blog_ms.handler.exception.ApplicationException;
-import az.shopery.blog_ms.handler.exception.FileStorageException;
 import az.shopery.blog_ms.handler.exception.ResourceNotFoundException;
 import az.shopery.blog_ms.model.dto.shared.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -60,7 +59,7 @@ public class GlobalExceptionHandler {
                         error -> HtmlUtils.htmlEscape(Objects.nonNull(error.getDefaultMessage())
                                 ? error.getDefaultMessage()
                                 : "Invalid value!"),
-                        (existing, replacement) -> existing
+                        (existing, _) -> existing
                 ));
 
         ErrorResponse errorResponse = ErrorResponse.builder()
@@ -73,16 +72,6 @@ public class GlobalExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(FileStorageException.class)
-    public ResponseEntity<ErrorResponse> handleFileStorage(FileStorageException ex, HttpServletRequest request) {
-        if (Objects.nonNull(ex.getMessage()) && ex.getMessage().contains("empty file")) {
-            log.debug("Empty file upload attempt");
-            return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
-        }
-        log.error("File storage error: ", ex);
-        return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 
     @ExceptionHandler(Exception.class)

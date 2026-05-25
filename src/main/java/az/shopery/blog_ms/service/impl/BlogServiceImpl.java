@@ -1,5 +1,6 @@
 package az.shopery.blog_ms.service.impl;
 
+import az.shopery.blog_ms.client.AwsClient;
 import az.shopery.blog_ms.handler.exception.ApplicationException;
 import az.shopery.blog_ms.handler.exception.ResourceNotFoundException;
 import az.shopery.blog_ms.mapper.BlogMapper;
@@ -13,7 +14,6 @@ import az.shopery.blog_ms.repository.BlogRepository;
 import az.shopery.blog_ms.repository.SavedBlogRepository;
 import az.shopery.blog_ms.repository.UserRepository;
 import az.shopery.blog_ms.service.BlogService;
-import az.shopery.blog_ms.util.aws.S3FileUtil;
 import az.shopery.blog_ms.util.enums.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,9 +30,9 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class BlogServiceImpl implements BlogService {
 
+    private final AwsClient awsClient;
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
-    private final S3FileUtil s3FileUtil;
     private final BlogMapper blogMapper;
     private final SavedBlogRepository savedBlogRepository;
 
@@ -131,7 +131,7 @@ public class BlogServiceImpl implements BlogService {
         BlogEntity blogEntity = getUserOwnedBlog(blogId, userEmail);
 
         String imageKey = blogEntity.getImageUrl();
-        s3FileUtil.deleteFileIfExists(imageKey);
+        awsClient.deleteFile(imageKey);
         blogRepository.delete(blogEntity);
         return SuccessResponse.of("Blog deleted successfully!");
     }
@@ -157,12 +157,12 @@ public class BlogServiceImpl implements BlogService {
         BlogEntity blogEntity = getUserOwnedBlog(blogId, userEmail);
 
         String oldImageUrlKey = blogEntity.getImageUrl();
-        String newImageUrlKey = s3FileUtil.uploadNewFile(oldImageUrlKey, imageFile);
+        String newImageUrlKey = awsClient.updateFile(oldImageUrlKey, imageFile).getBody();
 
         blogEntity.setImageUrl(newImageUrlKey);
         blogRepository.save(blogEntity);
 
-        String presignedUrl = s3FileUtil.generatePresignedUrl(newImageUrlKey);
+        String presignedUrl = awsClient.getPresignedUrl(newImageUrlKey).getBody();
         return SuccessResponse.of(presignedUrl, "Blog image updated successfully!");
     }
 
@@ -175,7 +175,7 @@ public class BlogServiceImpl implements BlogService {
             throw new ResourceNotFoundException("No blog image found for blog: " + blogId);
         }
 
-        s3FileUtil.deleteFileIfExists(imageKey);
+        awsClient.deleteFile(imageKey);
 
         blogEntity.setImageUrl(null);
         blogRepository.save(blogEntity);
