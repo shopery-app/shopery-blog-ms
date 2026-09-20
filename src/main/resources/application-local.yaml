@@ -16,5 +16,5 @@ spring:
 feign:
   client:
     config:
-      aws-ms:
-        url: ${AWS_MS:http://localhost:8084}
+      filenet-ms:
+        url: ${FILENET_MS:http://localhost:8089}

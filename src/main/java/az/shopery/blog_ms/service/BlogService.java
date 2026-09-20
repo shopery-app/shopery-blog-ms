@@ -10,7 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface BlogService {
     SuccessResponse<Page<BlogResponseDto>> getMyBlogs(String userEmail, Pageable pageable);
     SuccessResponse<BlogResponseDto> addMyBlog(String userEmail, BlogRequestDto blogRequestDto);
-    SuccessResponse<String> updateBlogImage(String userEmail, String blogId, MultipartFile imageFile);
+    SuccessResponse<byte[]> updateBlogImage(String userEmail, String blogId, MultipartFile imageFile);
     SuccessResponse<String> deleteBlogImage(String userEmail, String blogId);
     SuccessResponse<Page<BlogResponseDto>> getAllBlogs(Pageable pageable);
     SuccessResponse<Page<BlogResponseDto>> search(String query, Pageable pageable);
