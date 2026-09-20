@@ -45,7 +45,7 @@ public class BlogController {
     }
 
     @PostMapping(value = "/{blogId}/image", consumes = {"multipart/form-data"})
-    public ResponseEntity<SuccessResponse<String>> uploadBlogImage(@RequestParam String email, @PathVariable String blogId, @RequestParam("image") MultipartFile imageFile){
+    public ResponseEntity<SuccessResponse<byte[]>> uploadBlogImage(@RequestParam String email, @PathVariable String blogId, @RequestParam("image") MultipartFile imageFile){
         return ResponseEntity.ok(blogService.updateBlogImage(email, blogId, imageFile));
     }
 

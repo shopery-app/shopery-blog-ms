@@ -1,6 +1,5 @@
 package az.shopery.blog_ms.service.impl;
 
-import az.shopery.blog_ms.client.AwsClient;
 import az.shopery.blog_ms.handler.exception.ApplicationException;
 import az.shopery.blog_ms.handler.exception.ResourceNotFoundException;
 import az.shopery.blog_ms.mapper.BlogMapper;
@@ -14,6 +13,7 @@ import az.shopery.blog_ms.repository.BlogRepository;
 import az.shopery.blog_ms.repository.SavedBlogRepository;
 import az.shopery.blog_ms.repository.UserRepository;
 import az.shopery.blog_ms.service.BlogService;
+import az.shopery.blog_ms.util.common.FilenetClientHelper;
 import az.shopery.blog_ms.util.enums.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +30,10 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class BlogServiceImpl implements BlogService {
 
-    private final AwsClient awsClient;
+    private final BlogMapper blogMapper;
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
-    private final BlogMapper blogMapper;
+    private final FilenetClientHelper filenetClientHelper;
     private final SavedBlogRepository savedBlogRepository;
 
     @Override
@@ -130,8 +130,7 @@ public class BlogServiceImpl implements BlogService {
     public SuccessResponse<Void> deleteMyBlog(String userEmail, String blogId) {
         BlogEntity blogEntity = getUserOwnedBlog(blogId, userEmail);
 
-        String imageKey = blogEntity.getImageUrl();
-        awsClient.deleteFile(imageKey);
+        filenetClientHelper.deleteFile(blogEntity.getImageId());
         blogRepository.delete(blogEntity);
         return SuccessResponse.of("Blog deleted successfully!");
     }
@@ -153,32 +152,24 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public SuccessResponse<String> updateBlogImage(String userEmail, String blogId, MultipartFile imageFile) {
+    public SuccessResponse<byte[]> updateBlogImage(String userEmail, String blogId, MultipartFile imageFile) {
         BlogEntity blogEntity = getUserOwnedBlog(blogId, userEmail);
 
-        String oldImageUrlKey = blogEntity.getImageUrl();
-        String newImageUrlKey = awsClient.updateFile(oldImageUrlKey, imageFile).getBody();
-
-        blogEntity.setImageUrl(newImageUrlKey);
+        blogEntity.setImageId(filenetClientHelper.saveFile(imageFile));
         blogRepository.save(blogEntity);
 
-        String presignedUrl = awsClient.getPresignedUrl(newImageUrlKey).getBody();
-        return SuccessResponse.of(presignedUrl, "Blog image updated successfully!");
+        return SuccessResponse.of(filenetClientHelper.getFile(blogEntity.getImageId()), "Blog image updated successfully!");
     }
 
     @Override
     public SuccessResponse<String> deleteBlogImage(String userEmail, String blogId) {
         BlogEntity blogEntity = getUserOwnedBlog(blogId, userEmail);
 
-        String imageKey = blogEntity.getImageUrl();
-        if (Objects.isNull(imageKey) || imageKey.isBlank()) {
-            throw new ResourceNotFoundException("No blog image found for blog: " + blogId);
-        }
+        filenetClientHelper.deleteFile(blogEntity.getImageId());
 
-        awsClient.deleteFile(imageKey);
-
-        blogEntity.setImageUrl(null);
+        blogEntity.setImageId(null);
         blogRepository.save(blogEntity);
+
         log.info("Blog image deleted successfully for blog {}", blogEntity.getBlogTitle());
         return SuccessResponse.of(null, "Blog image deleted successfully!");
     }

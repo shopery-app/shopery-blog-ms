@@ -1,4 +1,4 @@
-package az.shopery.blog_ms.model.dto.shared;
+package az.shopery.blog_ms.model.dto.response;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -9,10 +9,9 @@ import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AuthorDto {
-    String name;
-    byte[] profilePhoto;
+public class GetFileResponseDto {
+    byte[] content;
 }
