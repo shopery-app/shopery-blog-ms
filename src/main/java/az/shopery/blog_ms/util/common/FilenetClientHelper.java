@@ -34,6 +34,8 @@ public class FilenetClientHelper {
     }
 
     public void deleteFile(UUID fileId) {
-        filenetClient.deleteFile(fileId);
+        if (Objects.nonNull(fileId)) {
+            filenetClient.deleteFile(fileId);
+        }
     }
 }
