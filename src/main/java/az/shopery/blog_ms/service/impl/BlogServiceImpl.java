@@ -17,7 +17,7 @@ import az.shopery.blog_ms.util.common.FilenetClientHelper;
 import az.shopery.blog_ms.util.enums.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import java.util.Objects;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -59,7 +59,7 @@ public class BlogServiceImpl implements BlogService {
         Boolean isSaved = savedBlogRepository.existsByBlogAndUser(blogEntity, userEntity);
 
         if (isSaved) {
-            savedBlogRepository.deleteByBlog(blogEntity);
+            savedBlogRepository.deleteByBlogAndUser(blogEntity, userEntity);
             return SuccessResponse.of("Blog has been unsaved successfully");
         }
 
@@ -81,24 +81,21 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @Transactional
     public SuccessResponse<Void> toggleBlogArchive(String userEmail, String blogId) {
         BlogEntity blogEntity = blogRepository.findBlogByIdAndUserEmail(parse(blogId), userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Blog with id: " + blogId + " not found!"));
-        SavedBlogEntity savedBlogEntity = savedBlogRepository.findByBlog(blogEntity).orElse(null);
+        List<SavedBlogEntity> savedBlogEntities = savedBlogRepository.findAllByBlog(blogEntity);
         if (blogEntity.getIsArchived()) {
-            if (Objects.nonNull(savedBlogEntity)) {
-                savedBlogEntity.setIsArchived(Boolean.FALSE);
-                savedBlogRepository.save(savedBlogEntity);
-            }
+            savedBlogEntities.forEach(savedBlogEntity -> savedBlogEntity.setIsArchived(Boolean.FALSE));
+            savedBlogRepository.saveAll(savedBlogEntities);
             blogEntity.setIsArchived(Boolean.FALSE);
             blogRepository.save(blogEntity);
             return SuccessResponse.of("Blog has been unarchived successfully!");
         }
 
-        if (Objects.nonNull(savedBlogEntity)) {
-            savedBlogEntity.setIsArchived(Boolean.TRUE);
-            savedBlogRepository.save(savedBlogEntity);
-        }
+        savedBlogEntities.forEach(savedBlogEntity -> savedBlogEntity.setIsArchived(Boolean.TRUE));
+        savedBlogRepository.saveAll(savedBlogEntities);
         blogEntity.setIsArchived(Boolean.TRUE);
         blogRepository.save(blogEntity);
         return SuccessResponse.of("Blog has been archived successfully!");
@@ -154,9 +151,11 @@ public class BlogServiceImpl implements BlogService {
     @Override
     public SuccessResponse<byte[]> updateBlogImage(String userEmail, String blogId, MultipartFile imageFile) {
         BlogEntity blogEntity = getUserOwnedBlog(blogId, userEmail);
+        UUID oldImageId = blogEntity.getImageId();
 
         blogEntity.setImageId(filenetClientHelper.saveFile(imageFile));
         blogRepository.save(blogEntity);
+        filenetClientHelper.deleteFile(oldImageId);
 
         return SuccessResponse.of(filenetClientHelper.getFile(blogEntity.getImageId()), "Blog image updated successfully!");
     }
